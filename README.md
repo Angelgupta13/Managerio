@@ -1,138 +1,426 @@
-# Managerio - AI-Powered Employee Wellbeing Platform
+# Managerio -- AI-Powered Employee Wellbeing Platform
 
-## 🌟 Project Overview
+Privacy-first burnout detection, talent discovery, and team health monitoring. Built with Next.js 16, React 19, and a 3-agent AI orchestrator.
 
-Managerio is a comprehensive full-stack web application designed to detect employee burnout before it manifests as attrition. Built with modern technologies including Next.js 16 and FastAPI, it provides actionable insights for HR managers and team leads through three specialized analysis engines.
+## Overview
 
-## 🎯 Problem Statement
+Managerio is an employee wellbeing analytics platform that detects burnout risk, surfaces hidden talent, and monitors team health through behavioral metadata analysis. The frontend provides role-adaptive dashboards (Employee, Manager, Admin), real-time AI chat with tool execution, and a privacy-first design where employee identities are anonymized by default.
 
-Employee burnout has become a critical issue:
-- **76%** of employees experience burnout (Harvard Business Review)
-- **$500 Billion** annual cost to US organizations
-- **6 months** average detection time (at exit interview)
-- **$150,000 - $300,000** cost per engineer resignation
+The platform processes only metadata (timestamps, message counts, calendar density) and never reads message content. Sentiment analysis is opt-in, and raw text is never stored.
 
-## 🏗️ Tech Stack
+## Tech Stack
 
-### Frontend
-- **Next.js 16** - React framework with App Router
-- **React 19** - UI Library
-- **TypeScript 5** - Type safety
-- **Tailwind CSS v4** - Styling
-- **Recharts & D3.js** - Data visualization
-- **Supabase Auth** - Authentication
+| Layer | Technology |
+|-------|------------|
+| Framework | Next.js 16.1 (App Router, Turbopack, standalone output) |
+| UI Library | React 19.2, TypeScript 5 |
+| Styling | Tailwind CSS v4, shadcn/ui, Radix UI primitives |
+| Data Visualization | Recharts, D3.js (force-directed network graphs) |
+| Animation | Framer Motion 12, GSAP 3, Rive (WebGL2) |
+| State | React Context (auth, tenant), SWR (data fetching) |
+| Auth | Supabase Auth via `@supabase/ssr` (HttpOnly cookie sessions) |
+| AI Chat | SSE streaming with 3-agent orchestrator |
+| Forms | React Hook Form + Zod validation |
+| Tables | TanStack Table v8 |
+| Node Graphs | React Flow (`@xyflow/react`) |
+| Markdown | react-markdown + remark-gfm + Shiki syntax highlighting |
 
-### Backend
-- **FastAPI 0.109** - Python async web framework
-- **Python 3.12** - Runtime
-- **SQLAlchemy** - ORM
-- **Gemini 2.5 Flash** - LLM for AI features
-- **NetworkX** - Graph analysis
-- **SciPy** - Statistical calculations
-
-### Database
-- **Supabase** - PostgreSQL + Authentication
-- **Two-Vault Architecture** - Privacy-first design
-
-## ✨ Key Features
+## Features
 
 ### Three Analysis Engines
-1. **Safety Valve** - Burnout detection using velocity, belongingness, and circadian entropy
-2. **Talent Scout** - Network analysis to find structurally critical "hidden gems"
-3. **Culture Thermometer** - Team health monitoring using SIR epidemiological model
 
-### AI-Powered Chat (Ask Sentinel)
-- 3-agent orchestrator with intelligent routing
-- Server-Sent Events (SSE) streaming
-- Tool integrations via Composio MCP
+- **Safety Valve** -- Burnout detection with velocity scoring, circadian entropy analysis, 30-day history charts, and attrition probability forecasting.
+- **Talent Scout** -- Network centrality analysis (betweenness + eigenvector) with hidden gem detection and D3 force-directed social graph visualization.
+- **Culture Thermometer** -- Team-level health monitoring with SIR contagion model, graph fragmentation metrics, and communication decay rate tracking.
 
-### Role-Based Access Control
-- 52-permission RBAC system
-- Three roles: Employee, Manager, Admin
-- GDPR-compliant consent management
+### AI Chat (Ask Sentinel)
 
-## 🚀 Quick Start
+- 3-agent orchestrator (Gemini 2.5 Flash) with automatic agent routing
+- SSE streaming with tool call visualization and OAuth connection links
+- Composio MCP Tool Router for 250+ third-party integrations
+- Session management with history, favorites, and search
+- AI-generated 1:1 agenda suggestions with talking points
+
+### Role-Based Access
+
+| Role | Access |
+|------|--------|
+| Employee | Personal wellbeing dashboard, AI chat, privacy controls, GDPR consent management |
+| Manager | All engines, team analytics, data ingestion, employee risk views |
+| Admin | Full access, member/team management, audit log, simulation controls, tenant management |
+
+### Privacy Architecture
+
+- **Two-vault system**: Behavioral metadata and identity stored separately
+- **Anonymized by default**: Employee hashes shown in all views; real names revealed only for CRITICAL risk levels
+- **Opt-in sentiment**: Text analysis requires explicit consent; raw text is never stored
+- **GDPR controls**: Employees can pause monitoring, revoke consent, and view their audit trail
+- **Context enrichment**: Employees can explain anomalous patterns (e.g., "working late due to product launch") to prevent false positives
+
+## External APIs and Setup
+
+### Required Services
+
+| Service | Purpose | Setup |
+|---------|---------|-------|
+| **Supabase** | Authentication and session management (JWT + HttpOnly cookies) | Create a free project at [supabase.com](https://supabase.com). Copy the project URL and anon key from Settings > API. |
+| **Managerio Backend** | All data, AI chat, engine analysis, tool connections | Run the FastAPI backend on port 8000. See `backend/README.md` for setup. |
+
+### Optional Services (via Backend)
+
+These services are configured on the backend. The frontend does not call them directly.
+
+| Service | Purpose |
+|---------|---------|
+| Google Gemini 2.5 Flash | AI chat orchestrator (3-agent system) |
+| Composio | MCP Tool Router for third-party integrations (Slack, GitHub, Gmail, etc.) |
+
+### Environment Variables
+
+Create a `.env.local` file in the `frontend/` directory:
+
+```env
+# Supabase Auth (required)
+# Get these from your Supabase project: Settings > API
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...your-anon-key
+
+# Backend API (required)
+# Points to the FastAPI backend -- no trailing slash
+NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+
+# WebSocket (required for real-time events)
+NEXT_PUBLIC_WS_URL=ws://localhost:8000/ws
+```
+
+Both `NEXT_PUBLIC_SUPABASE_*` variables are validated at runtime. The app throws on startup if either is missing.
+
+See `.env.example` for a copy-paste template with placeholder values.
+
+## Setup and Installation
 
 ### Prerequisites
+
 - Node.js 20+
-- Python 3.12+
-- Supabase account
+- pnpm 9+ (`corepack enable pnpm` or `npm install -g pnpm`)
+- A running Managerio backend (see `backend/README.md`)
+- A Supabase project with email auth enabled
 
-### Frontend Setup
+### Quick Start
+
 ```bash
-cd frontend
-npm install
-npm run dev
+# Clone the repository
+git clone https://github.com/Angelgupta13/Managerio.git
+cd Managerio
+
+# Install dependencies
+cd frontend && pnpm install
+
+# Create your environment file
+cp .env.example .env.local
+# Edit .env.local with your Supabase credentials and backend URL
+
+# Start the development server (Turbopack)
+pnpm dev
 ```
 
-### Backend Setup
+Open [http://localhost:3000](http://localhost:3000). You should see the login page.
+
+### Demo Credentials
+
+Seed data is provided via the backend. The shared password is set via `SEED_PASSWORD` in `backend/.env`.
+
+| Email | Role |
+|-------|------|
+| `admin@acme.com` | Admin |
+| `eng.manager@acme.com` | Manager |
+| `dev1@acme.com` | Employee |
+
+Password for all accounts: `Demo123!`
+
+### Production Build
+
 ```bash
-cd backend
-python -m venv .venv
-.venv\Scripts\pip install -r requirements.txt
-.venv\Scripts\python -m uvicorn app.main:app --reload --port 8000
+pnpm build   # Type-checks and builds for production
+pnpm start   # Starts the production server on port 3000
 ```
 
-### Database Setup
-1. Create a Supabase project at https://supabase.com
-2. Update `DATABASE_URL` in `backend/.env`
-3. Run: `python setup_db.py`
-4. Seed demo data: `python -m scripts.seed_fresh`
+## Docker
 
-## 👤 Demo Credentials
+The project includes a multi-stage Dockerfile optimized for production (Node 20 Alpine, standalone output, non-root user, health check).
 
-| Email | Password | Role |
-|-------|----------|------|
-| admin@acme.com | Demo123! | Admin |
-| eng.manager@acme.com | Demo123! | Manager |
-| dev1@acme.com | Demo123! | Employee |
+### Build and Run
 
-## 📁 Project Structure
+```bash
+# Build the image
+docker build -t managerio-frontend .
+
+# Run with environment variables
+docker run -p 3000:3000 \
+  -e NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co \
+  -e NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key \
+  -e NEXT_PUBLIC_API_URL=http://backend:8000/api/v1 \
+  -e NEXT_PUBLIC_WS_URL=ws://backend:8000/ws \
+  managerio-frontend
+```
+
+### Build Stages
+
+The Dockerfile uses three stages for a minimal production image (~150MB):
+
+1. **deps** -- Installs dependencies with `pnpm install --frozen-lockfile`
+2. **builder** -- Builds the Next.js app with `pnpm build` (standalone output mode)
+3. **runner** -- Production image with non-root `nextjs` user (UID 1001) and a `wget`-based health check on port 3000
+
+### Health Check
+
+The container includes a built-in health check:
+
+```
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=5
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+```
+
+## Architecture
+
+### Component Hierarchy
+
+```
+graph TB
+    subgraph "Auth Layer"
+        SUP[Supabase Auth]
+        MW[Middleware]
+        AC[AuthContext]
+    end
+
+    subgraph "Layout"
+        SB[Sidebar\nPlatform / Personal / Workspace]
+        CL[Client Layout]
+    end
+
+    subgraph "Pages"
+        DASH[Dashboard\nEmployee / Manager / Admin views]
+        WELL[My Wellness\nPersonal signals + appeal]
+        SV[Safety Valve\nBurnout detection]
+        TS[Talent Scout\nNetwork graph]
+        CT[Culture Thermometer\nTeam health]
+        DI[Data Ingestion\nPipeline visibility]
+        CHAT[Ask Sentinel\n3-agent AI chat]
+        NOTIF[Notifications\nWellness alerts]
+        ADMIN[Admin Panel\nUsers + Teams + Audit]
+    end
+
+    subgraph "Shared Components"
+        RA[RiskAssessment]
+        VC[VelocityChart]
+        AI[AiInsightCard]
+        PM[ProfileModal]
+        NC[NudgeCard]
+        PC[ProvideContextCard]
+    end
+
+    subgraph "Data Flow"
+        API[API Client\nAxios + token cache]
+        SWR[SWR Hooks\nuseUsers, useRiskHistory]
+        SSE[SSE Stream\nChat responses]
+    end
+
+    SUP --> MW --> AC
+    AC --> CL
+    CL --> SB
+    SB --> DASH
+    SB --> WELL
+    SB --> SV
+    SB --> TS
+    SB --> CT
+    SB --> DI
+    SB --> CHAT
+    SB --> NOTIF
+    SB --> ADMIN
+
+    DASH --> RA
+    SV --> AI
+    SV --> PM
+    WELL --> PC
+    WELL --> NC
+
+    API --> SWR
+    SWR --> DASH
+    SWR --> SV
+    API --> SSE
+    SSE --> CHAT
+```
+
+## Architecture Decisions
+
+### 1. App Router with Server/Client Component Split
+
+All pages use the Next.js App Router. The root layout (`app/layout.tsx`) is a server component that renders `AuthProvider`, `TenantProvider`, and `ThemeProvider` as client boundaries. Individual page content is wrapped in `<ProtectedRoute>` and `<RoleGuard>` for access control.
+
+### 2. Supabase SSR for HttpOnly Cookie Auth
+
+Authentication uses `@supabase/ssr` with `createServerClient` in middleware and `createClient` on the client. Tokens are stored in HttpOnly cookies (not localStorage), with automatic refresh and chunked cookie support for large JWTs.
+
+### 3. Four-Layer Security Model
+
+1. **Next.js middleware** (`middleware.ts`) -- Redirects unauthenticated requests to `/login`
+2. **ProtectedRoute component** -- Client-side guard wrapping all authenticated pages
+3. **Backend JWT verification** -- Every API request includes `Authorization: Bearer <token>`
+4. **RBAC enforcement** -- 52 permissions enforced on the backend; `role` from `AuthContext` controls UI visibility
+
+### 4. SSE Streaming for AI Chat (Not WebSocket)
+
+The AI chat uses Server-Sent Events (`POST /ai/chat/stream`) instead of WebSocket for streaming responses. SSE is simpler to deploy behind load balancers, works through CDNs without special configuration, and naturally fits the request-response pattern of chat. The stream carries typed events: `token`, `tool_call`, `connection_link`, `refusal`, `workflow`, and `done`.
+
+### 5. Privacy-First Data Display
+
+Employee hashes (`user_hash`) are the default identifier in all views. Real names (`display_name`) are fetched from the backend profile only for Admin views and CRITICAL risk escalations. The `Connection Index` (not sentiment) is the primary engagement signal, avoiding the ethical concerns of emotion tracking.
+
+### 6. Cached Access Token Pattern
+
+The API module (`lib/api.ts`) caches the Supabase access token in a module-level variable (`setCachedAccessToken`), set by the `AuthProvider` on every auth state change. This avoids calling `supabase.auth.getSession()` on every API request, which can fail when the refresh token is invalid even though the access token is still valid.
+
+### 7. Content Security Policy
+
+The `next.config.ts` sets a strict CSP including `Strict-Transport-Security`, `X-Frame-Options: DENY`, and `Permissions-Policy`. The CSP whitelists `*.supabase.co` for auth, `*.composio.dev` for OAuth flows, and blocks all other frames.
+
+## Design System
+
+### Aesthetic Direction
+
+Industrial/utilitarian with warmth. Information-dense but not overwhelming. Dark mode is the primary theme; light mode is supported via `next-themes`.
+
+**References**: Lattice (HR warmth) meets Linear (data clarity). Never surveillance software (Teramind), never generic AI dashboards (purple gradients).
+
+### Color
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `primary` | `#10B981` (Emerald) | Single accent color -- primary actions, active states |
+| `--risk-low` | `#22C55E` | LOW risk badge |
+| `--risk-elevated` | `#F59E0B` | ELEVATED risk badge |
+| `--risk-critical` | `#EF4444` | CRITICAL risk badge |
+
+Grayscale dominates. Color is rare and meaningful.
+
+### Typography
+
+| Role | Size | Font |
+|------|------|------|
+| Display / Hero | 24px | Geist Sans, `font-semibold` |
+| Body | 14px | Geist Sans, `font-normal` |
+| UI Labels | 11px | Geist Sans, `font-medium uppercase tracking-wider` |
+| KPI Values | 28px | Geist Sans, `font-semibold tabular-nums` |
+| Code / Data | 13px | Geist Mono |
+| Headings (accent) | Variable | Playfair Display (serif) |
+
+Fonts are loaded via the `geist` npm package and `next/font/google`, injected as CSS variables in `app/layout.tsx`.
+
+## Project Structure
 
 ```
 Managerio/
-├── frontend/           # Next.js 16 Frontend
-│   ├── app/           # App Router pages
-│   ├── components/    # React components
-│   ├── lib/           # API client, utilities
-│   └── hooks/         # Custom React hooks
+├── frontend/                    # Next.js Frontend
+│   ├── app/                     # App Router pages
+│   │   ├── admin/              # Admin panel (Members, Teams, Audit)
+│   │   ├── ask-sentinel/        # AI chat + session history
+│   │   ├── dashboard/          # Role-adaptive dashboard
+│   │   ├── data-ingestion/     # CSV upload + pipeline status
+│   │   ├── engines/
+│   │   │   ├── safety/         # Safety Valve -- burnout detection
+│   │   │   ├── talent/         # Talent Scout -- network analysis
+│   │   │   ├── culture/        # Culture Thermometer -- team health
+│   │   │   └── network/        # Interactive D3 social graph
+│   │   ├── login/              # Auth page (email + SSO)
+│   │   ├── marketplace/        # Composio tool connections
+│   │   ├── me/                 # Employee self-service (consent, GDPR)
+│   │   ├── notifications/      # Real-time wellness alerts
+│   │   ├── simulation/         # Digital twin demo controls
+│   │   └── layout.tsx          # Root layout (providers, fonts)
+│   ├── components/
+│   │   ├── chat/               # SSE streaming interface, tool cards
+│   │   ├── dashboard/          # Stat cards, risk meters, charts
+│   │   ├── layout/             # Sidebar, header, client layout
+│   │   ├── tools/              # Marketplace tool cards
+│   │   ├── ui/                 # shadcn/ui primitives
+│   │   └── *.tsx               # Feature components (network graph, etc.)
+│   ├── contexts/
+│   │   ├── auth-context.tsx   # Supabase auth state + role fetching
+│   │   └── tenant-context.tsx  # Multi-tenant context
+│   ├── hooks/                  # Domain hooks (useRiskData, useNetworkData, etc.)
+│   ├── lib/
+│   │   ├── api.ts              # Axios-based API client with auth headers
+│   │   ├── supabase.ts         # Supabase client factory
+│   │   ├── sso.ts              # SSO configuration
+│   │   └── utils.ts            # Shared utilities (cn, formatters)
+│   ├── types/                  # TypeScript type definitions
+│   ├── middleware.ts          # Auth middleware (Supabase SSR)
+│   ├── next.config.ts          # Standalone output, CSP headers, security
+│   ├── Dockerfile              # Multi-stage production build
+│   └── .env.example            # Environment variable template
 │
-├── backend/           # FastAPI Backend
+├── backend/                     # FastAPI Backend
 │   ├── app/
-│   │   ├── api/      # API endpoints
-│   │   ├── services/ # Business logic
-│   │   └── models/   # Database models
-│   └── scripts/       # Seed scripts
+│   │   ├── api/v1/endpoints/  # API routes
+│   │   ├── services/           # Business logic
+│   │   └── models/             # Database models
+│   └── scripts/                # Seed scripts
 │
-└── README.md          # This file
+└── README.md                   # This file
 ```
 
-## 📊 Features Implemented
+## Pages and Routes
 
-- ✅ User Authentication with JWT
-- ✅ Role-based Dashboards (Employee, Manager, Admin)
-- ✅ Safety Valve Engine - Burnout detection
-- ✅ Talent Scout Engine - Network analysis
-- ✅ Culture Thermometer - Team health
-- ✅ 3-Agent AI Chat with SSE streaming
-- ✅ 52-permission RBAC system
-- ✅ Data Visualization (Recharts, D3.js)
-- ✅ GDPR Consent Management
+| Route | Page | Access |
+|-------|------|--------|
+| `/login` | Login (email + SSO) | Public |
+| `/dashboard` | Role-adaptive dashboard | All authenticated |
+| `/ask-sentinel` | AI chat with 3-agent orchestrator | All authenticated |
+| `/ask-sentinel/history` | Chat session history | All authenticated |
+| `/engines/safety` | Safety Valve -- burnout detection | Manager, Admin |
+| `/engines/talent` | Talent Scout -- network analysis | Manager, Admin |
+| `/engines/culture` | Culture Thermometer -- team health | Manager, Admin |
+| `/engines/network` | Interactive D3 social graph | Manager, Admin |
+| `/admin` | Admin panel (Members / Teams / Audit tabs) | Admin only |
+| `/notifications` | Notification center | All authenticated |
+| `/data-ingestion` | CSV upload + pipeline status | Manager, Admin |
+| `/marketplace` | Tool connections (Composio) | All authenticated |
+| `/me` | Employee self-service (consent, GDPR) | All authenticated |
+| `/simulation` | Digital twin demo controls | Admin only |
 
-## 📝 Project Report
+## Testing
 
-See `PROJECT_REPORT_V2.html` for detailed documentation (6-8 pages).
+```bash
+# Type checking
+npx tsc --noEmit
 
-## 👥 Team
+# Linting
+pnpm lint
 
-- [Your Name] - [Roll Number]
+# Production build (includes type check)
+pnpm build
+```
 
-## 📜 License
+## Troubleshooting
 
-This project is for academic submission purposes.
+**CORS errors on API calls**
+The backend `ALLOWED_ORIGINS` must include `http://localhost:3000`. Check `backend/.env`.
 
----
+**Stale TypeScript errors in `.next/types`**
 
-**Bharati Vidyapeeth's College of Engineering, New Delhi**  
-**Web Technologies Lab - PBL Mini Project**  
-**Faculty: Mohit Tiwari**
+```bash
+rm -rf .next/types && pnpm dev
+```
+
+**Missing `NEXT_PUBLIC_SUPABASE_URL` on startup**
+Verify `.env.local` is in the `frontend/` directory (not the repo root) and that both variable names include the `NEXT_PUBLIC_` prefix.
+
+**Login succeeds but all pages redirect back to `/login`**
+The `JWT_SECRET` in `backend/.env` must match the JWT secret in your Supabase project (Settings > API > JWT Settings).
+
+**Docker build fails on `pnpm-lock.yaml` not found**
+Ensure `pnpm-lock.yaml` exists. Run `pnpm install` locally first to generate it.
+
+## Further Reading
+
+- `backend/README.md` -- Backend setup, API documentation, agent architecture
