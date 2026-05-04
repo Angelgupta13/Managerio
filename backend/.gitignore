@@ -1,0 +1,24 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Environment files (keep .env.example)
+.env
+.env.*
+!.env.example
+
+# Test artifacts
+test_results.txt
+*.log
+
+# OS files
+.DS_Store
+Thumbs.dbtest.db
+test_*.py
